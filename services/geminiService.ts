@@ -1,7 +1,7 @@
 import { GoogleGenAI, GenerateContentResponse, Type, GeneratedImage } from "@google/genai";
 import { AIGeneratorType, UserProfile, CompatibilityReport, AIProfileReview, Message, DateIdea, ConversationTopic, ChatAnalysis, QuizResult, DailyBriefing, WebSource, PostDateAnalysis, AIPhotoAnalysisReport, SafetyAnalysisReport, TrustAndSafetyReport, LiveCoachingTip, AIFilterCriteria, ProactiveDateSuggestion, PracticeScenario, ConversationPracticeReport, PersonalizedDateIdea, Conversation, BlindDateRevealReport, VibeCheckReport, TwoTruthsGame, FirstMessageAuditReport, ConnectionCrest, FutureScenario, FutureScenarioReport, SharedMemory, MatchExplanation, ConnectionNudge, RelationshipNorthStarReport, DatingPatternReport, GiftIdea, WeeklyGoal, ConversationVibe, ProfileGlowUpSuggestion, DateBucketListItem, SharedValue, CoupleQuizQuestion, CoupleQuiz, DatePlan, DateVenue, JournalEntry, JournalAnalysisReport, VideoCallReport, WhatIfScenario, WhatIfVibe, RPSChoice, RPSResult, CoupleJournalPrompt, GuessTheVibeScenario, VibeWeaverStorySegment, VibeWeaverReport, PeaceKeeperReport, CoupleGoal, FakeProfile } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY! });
 const model = 'gemini-2.5-flash';
 
 const getPrompt = (type: AIGeneratorType, keywords: string): string => {
@@ -30,7 +30,7 @@ export const generateAIContent = async (type: AIGeneratorType, keywords: string)
                 topK: 32
             }
         });
-        
+
         return response.text;
     } catch (error) {
         console.error("Error generating AI content:", error);
@@ -50,7 +50,7 @@ export const generateContentFromAudio = async (type: AIGeneratorType, audioBase6
         const textPrompt = `The following audio contains a person describing themselves for their matrimonial profile. First, transcribe the audio. Then, based on the transcription, write a compelling and warm profile ${type.toLowerCase()} for them.
         For a BIO, it should be about 100 words. For a STORY, it should be a narrative of 250-300 words.
         The tone should be genuine, confident, and approachable.`;
-        
+
         const textPart = {
             text: textPrompt
         };
@@ -64,7 +64,7 @@ export const generateContentFromAudio = async (type: AIGeneratorType, audioBase6
                 topK: 32
             }
         });
-        
+
         return response.text;
 
     } catch (error) {
@@ -94,7 +94,7 @@ export const generateAIContentFromImage = async (base64Image: string, mimeType: 
             contents: { parts: [imagePart, textPart] },
             config: { temperature: 0.5 }
         });
-        
+
         return response.text;
 
     } catch (error) {
@@ -109,7 +109,7 @@ export const glowUpPhoto = async (base64Image: string, mimeType: string): Promis
         inlineData: { data: base64Image, mimeType },
     };
     const descriptionPrompt = "Describe this photo for a dating profile in extreme detail. Describe the person's appearance (hair color, style, clothing), their pose and expression, the background, and the overall mood. Be factual and descriptive. This description will be used to create a new, enhanced image.";
-    
+
     const descriptionResponse = await ai.models.generateContent({
         model, // gemini-2.5-flash
         contents: { parts: [imagePartForDescription, { text: descriptionPrompt }] },
@@ -132,7 +132,7 @@ export const glowUpPhoto = async (base64Image: string, mimeType: string): Promis
     if (!imageResponse.generatedImages || imageResponse.generatedImages.length === 0) {
         throw new Error("Image generation failed to produce an image.");
     }
-    
+
     return imageResponse.generatedImages[0].image.imageBytes;
 };
 
@@ -244,7 +244,7 @@ export interface InitialAppData {
 
 export const getInitialAppData = async (currentUser: UserProfile, conversations: Conversation[], otherUsers: UserProfile[]): Promise<InitialAppData> => {
     const otherUsersSummary = otherUsers.map(u => ({id: u.id, bio: u.bio, interests: u.interestTags, preferences: u.partnerPreferences}));
-    
+
     const prompt = `
     Based on the user's profile and activity, generate a personalized home screen briefing and select up to 3 compatible daily picks from the available users list.
 
@@ -254,7 +254,7 @@ export const getInitialAppData = async (currentUser: UserProfile, conversations:
 
     Respond with ONLY a JSON object in the specified format. If there are no other users, or no suitable picks, return an empty array for dailyPickIds.
     `;
-    
+
     const response = await ai.models.generateContent({
         model,
         contents: prompt,
@@ -342,7 +342,7 @@ export const planDateWithConcierge = async (idea: string, location: string, time
                 }
             }
         }
-        
+
         let jsonString = response.text.trim();
         const startIndex = jsonString.indexOf('[');
         const endIndex = jsonString.lastIndexOf(']');
@@ -351,9 +351,9 @@ export const planDateWithConcierge = async (idea: string, location: string, time
         } else {
              throw new Error("AI response was not in the expected format.");
         }
-        
+
         const venues: DateVenue[] = JSON.parse(jsonString);
-        
+
         return { venues, sources: webSources };
     } catch (error) {
         console.error("Error planning date with concierge:", error);
@@ -362,11 +362,11 @@ export const planDateWithConcierge = async (idea: string, location: string, time
 };
 
 export const generateWhatIfScenario = async (currentUser: UserProfile, otherProfile: UserProfile, vibe: WhatIfVibe): Promise<WhatIfScenario> => {
-    const prompt = `Based on these two profiles, create a short, fun, and slightly romantic "what if" story about a hypothetical first meeting or date. 
+    const prompt = `Based on these two profiles, create a short, fun, and slightly romantic "what if" story about a hypothetical first meeting or date.
     The tone should be charming and imaginative, with a specific vibe of "${vibe.name} ${vibe.emoji}". The story should reflect this vibe.
     My Profile: ${JSON.stringify({ name: currentUser.name, interests: currentUser.interestTags, bio: currentUser.bio })}
     Their Profile: ${JSON.stringify({ name: otherProfile.name, interests: otherProfile.interestTags, bio: otherProfile.bio })}
-    
+
     Respond ONLY with a JSON object in the specified format. The story should be about 100-120 words. The emoji should match the vibe of the story. The title should be catchy.`;
 
     const response = await ai.models.generateContent({
@@ -398,7 +398,7 @@ export const continueWhatIfStory = async (existingStory: string, vibe: WhatIfVib
     ---
     ${existingStory}
     ---
-    
+
     What happens next?`;
 
     try {
@@ -411,7 +411,7 @@ export const continueWhatIfStory = async (existingStory: string, vibe: WhatIfVib
                 topK: 32
             }
         });
-        
+
         return `\n\n${response.text}`;
     } catch (error) {
         console.error("Error continuing What If story:", error);
@@ -462,7 +462,7 @@ export const generateGuessTheVibeScenario = async (currentUser: UserProfile, oth
         1. A short, one or two-sentence summary of a hypothetical, early-stage conversation between them.
         2. A "correct vibe" that accurately describes this conversation (e.g., "Playful & Witty", "Deep & Thoughtful", "Curious & Inquisitive", "Adventurous & Bold").
         3. An array of 4 "vibe options". This array must include the correct vibe and three other plausible but incorrect "distractor" vibes. The correct vibe should be randomly placed in the array.
-        
+
         Respond ONLY with a JSON object in the specified format.
     `;
 
@@ -494,7 +494,7 @@ export const generateGuessTheVibeScenario = async (currentUser: UserProfile, oth
     });
 
     const scenarioData = JSON.parse(response.text) as Omit<GuessTheVibeScenario, 'otherProfileId'>;
-    
+
     if (scenarioData.vibeOptions.length !== 4) {
         throw new Error("AI generated an invalid number of vibe options.");
     }
@@ -515,14 +515,14 @@ export const generateVibeWeaverScenario = async (
     storyHistory: { user1Choice: string, user2Choice: string, story: string }[]
 ): Promise<VibeWeaverStorySegment> => {
     const historySummary = storyHistory.map(turn => `Previously: ${turn.story}\n${user1.name} chose: "${turn.user1Choice}". ${user2.name} chose: "${turn.user2Choice}".`).join('\n\n');
-    
+
     const prompt = `
         You are a creative storyteller for a dating app game called "Vibe Weaver".
         Two users, ${user1.name} and ${user2.name}, are weaving a collaborative story.
         Their profiles:
         - ${user1.name}: ${user1.bio} (Interests: ${user1.interestTags?.join(', ')})
         - ${user2.name}: ${user2.bio} (Interests: ${user2.interestTags?.join(', ')})
-        
+
         Story so far:
         ${historySummary}
 
@@ -606,7 +606,7 @@ export const analyzeVibeWeaverResults = async (
 };
 
 export const generateCoupleComic = async (currentUser: UserProfile, otherProfile: UserProfile, scenario: string): Promise<string> => {
-    
+
     const detailedPrompt = `Generate a single image containing a 3-panel comic strip, arranged vertically.
     The style must be a simple, cute, flat color webcomic style with charming characters and clean lines.
 
@@ -624,7 +624,7 @@ export const generateCoupleComic = async (currentUser: UserProfile, otherProfile
 
     Create a similar 3-panel narrative for the user-provided scenario. The comic should have a heartwarming or humorous tone. No dialogue text or speech bubbles in the image. The story should be told visually.
     The final output should be a single, cohesive image.`;
-    
+
     const response = await ai.models.generateImages({
         model: 'imagen-3.0-generate-002',
         prompt: detailedPrompt,
@@ -638,14 +638,14 @@ export const generateCoupleComic = async (currentUser: UserProfile, otherProfile
     if (!response.generatedImages || response.generatedImages.length === 0) {
         throw new Error("Image generation failed to produce an image.");
     }
-    
+
     return response.generatedImages[0].image.imageBytes;
 };
 
 export const generatePeaceKeeperResponse = async (whatHappened: string, whatIWantToSay: string): Promise<PeaceKeeperReport> => {
     const prompt = `
         You are a relationship counselor AI named Peace Keeper. A user is in a conflict with their partner and needs help de-escalating.
-        
+
         The situation: "${whatHappened}"
         What the user wants to say: "${whatIWantToSay}"
 
@@ -655,7 +655,7 @@ export const generatePeaceKeeperResponse = async (whatHappened: string, whatIWan
         2.  **talkingPoints**: Provide 2-3 bullet points of advice for the user on how to approach this conversation. These should be actionable tips like "Find a calm time to talk" or "Listen to their side without interrupting."
         3.  **partnerPerspective**: Write a short paragraph that gently suggests what the partner might be feeling or thinking. This should foster empathy. Frame it as a possibility, e.g., "It's possible your partner might be feeling..."
     `;
-    
+
     const response = await ai.models.generateContent({
         model,
         contents: prompt,
@@ -684,13 +684,13 @@ export const generateGoalEmoji = async (goalTitle: string): Promise<string> => {
 
 export const generateGoalSuggestions = async (user1: UserProfile, user2: UserProfile, conversation: Conversation): Promise<Omit<CoupleGoal, 'id' | 'isComplete' | 'suggestedBy'>[]> => {
     const prompt = `Based on the profiles of ${user1.name} and ${user2.name} and their recent conversation, suggest 3 diverse, actionable, and fun goals for them to accomplish together. For each goal, provide a title and a single relevant emoji. The goals should be things a couple can work towards, like "Learn a new recipe together" or "Plan a weekend trip".
-    
+
     User 1 Profile: ${JSON.stringify({ interests: user1.interestTags, profession: user1.profession })}
     User 2 Profile: ${JSON.stringify({ interests: user2.interestTags, profession: user2.profession })}
     Conversation Snippet: ${JSON.stringify(conversation.messages.slice(-10).map(m => m.text))}
-    
+
     Respond ONLY with a JSON array in the format: [{"title": "...", "emoji": "..."}, ...].`;
-    
+
     const response = await ai.models.generateContent({
         model,
         contents: prompt,
@@ -845,7 +845,7 @@ export const generateQuizAnalysis = async (answers: Record<string, string>): Pro
 export const getDatingSafetyTips = async (query: string): Promise<{ text: string; sources: WebSource[] }> => {
     const prompt = `A user is asking for dating safety advice. Their query is: "${query}". Provide a helpful, concise, and safe response using Google Search. Summarize the key tips.`;
     const response = await ai.models.generateContent({ model, contents: prompt, config: { tools: [{ googleSearch: {} }] } });
-    
+
     const webSources: WebSource[] = response.candidates?.[0]?.groundingMetadata?.groundingChunks
         ?.map(chunk => chunk.web && { uri: chunk.web.uri, title: chunk.web.title || chunk.web.uri })
         .filter((source): source is WebSource => source !== undefined) || [];
