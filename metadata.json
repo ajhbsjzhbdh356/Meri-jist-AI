@@ -1,0 +1,9 @@
+{
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "name": "Copy of Soul-Mate-AI-(a.3.2)5",
+  "description": "",
+  "prompt": ""
+}
